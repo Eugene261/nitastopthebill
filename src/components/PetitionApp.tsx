@@ -1,105 +1,49 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useSyncExternalStore } from "react";
 import ProgressBar from "./ProgressBar";
 import SupporterCard, { Supporter } from "./SupporterCard";
 import LiveTicker from "./LiveTicker";
 import PetitionModal from "./PetitionModal";
+import { getSignatureCount, getSignatures } from "@/app/actions";
 
 interface PetitionAppProps {
   initialCount: number;
   initialSignatures: Supporter[];
 }
 
-const GHANA_CITIES = [
-  "Accra",
-  "Kumasi",
-  "Tema",
-  "Takoradi",
-  "Cape Coast",
-  "Tamale",
-  "Koforidua",
-  "Ho",
-  "Sunyani",
-  "Legon",
-];
+const signedStorageKey = "nita_petition_signed";
+const signedStorageChangedEvent = "nita_petition_signed_changed";
 
-const SIMULATED_POOL = [
-  {
-    name: "Abena Bonsu",
-    reason:
-      "This bill will cripple young freelancers in Ghana who rely on international remote work.",
-  },
-  {
-    name: "Kwame Appiah",
-    reason:
-      "We need policies that encourage startups, not policies that license developers like electricians.",
-  },
-  {
-    name: "Selorm Gavor",
-    reason:
-      "I work remotely for a US company. If I need a government license to write code, they will just hire from another country.",
-  },
-  {
-    name: "Mawuli Klutse",
-    reason:
-      "This bill overlaps with the Cyber Security Authority. Let's not build another redundant regulatory empire.",
-  },
-  {
-    name: "Farida Tetteh",
-    reason:
-      "Coding is self-taught. You cannot certify passion and curiosity. Stop this bill!",
-  },
-  {
-    name: "Ekow Yankah",
-    reason:
-      "This will destroy the gig economy for young university students who code to pay their tuition.",
-  },
-  {
-    name: "Benedicta Agyei",
-    reason:
-      "Who drafts these bills? We need to consult the actual developers, designers, and creators first.",
-  },
-  {
-    name: "Nii Odoi",
-    reason:
-      "Protect our digital space. Keep it open, competitive, and free of unnecessary government bottlenecks.",
-  },
-  {
-    name: "Araba Mensah",
-    reason:
-      "The tech industry in Ghana has thrived because it's unregulated. Regulation only brings corruption and delays.",
-  },
-  {
-    name: "Yao Dzisah",
-    reason: "This bill is anti-innovation. Please let us build in peace.",
-  },
-  {
-    name: "Esi Murphy",
-    reason:
-      "I am a self-taught UI/UX designer. Will NITA require me to sit an exam to draw wireframes?",
-  },
-  {
-    name: "Paa Kwesi",
-    reason:
-      "This is a major step backward for Ghana's digitalization agenda.",
-  },
-  {
-    name: "Adjoa Boateng",
-    reason:
-      "We want to be the Gateway to Africa for tech. This bill is locking the gate.",
-  },
-  {
-    name: "Jojo Quansah",
-    reason:
-      "Our startup is already struggling with taxes, now we have to pay license fees for coding?",
-  },
-  {
-    name: "Fati Ibrahim",
-    reason:
-      "This will completely slow down tech training programs. Support tech hubs, don't tax them!",
-  },
-];
+function subscribeToSignedStatus(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === signedStorageKey) {
+      onStoreChange();
+    }
+  };
+
+  const handleLocalChange = () => onStoreChange();
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(signedStorageChangedEvent, handleLocalChange);
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(signedStorageChangedEvent, handleLocalChange);
+  };
+}
+
+function getSignedSnapshot() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return localStorage.getItem(signedStorageKey) === "true";
+}
 
 export default function PetitionApp({
   initialCount,
@@ -109,43 +53,54 @@ export default function PetitionApp({
     useState<Supporter[]>(initialSignatures);
   const [count, setCount] = useState(initialCount);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [hasSigned, setHasSigned] = useState(false);
+  const hasSigned = useSyncExternalStore(
+    subscribeToSignedStatus,
+    getSignedSnapshot,
+    () => false,
+  );
   const [shareCopied, setShareCopied] = useState(false);
+  const [colorOffset, setColorOffset] = useState(0);
 
   useEffect(() => {
-    const signed = localStorage.getItem("nita_petition_signed");
-    if (signed) setHasSigned(true);
+    const interval = setInterval(() => {
+      setColorOffset((prev) => (prev + 1) % 3);
+    }, 2500); // changes colors every 2.5 seconds
+    return () => clearInterval(interval);
   }, []);
 
-  // Background simulation
+  const ghanaColors = [
+    "#CE1126", // Red
+    "#D9A200", // Warm Gold/Yellow (darker for excellent readability on white)
+    "#006B3F", // Green
+  ];
+
+  const getColor = (index: number) => {
+    return ghanaColors[(index + colorOffset) % 3];
+  };
+
+  // Poll for new real signatures every 30 seconds
   useEffect(() => {
-    const triggerSimulation = () => {
-      const template =
-        SIMULATED_POOL[Math.floor(Math.random() * SIMULATED_POOL.length)];
-      const city =
-        GHANA_CITIES[Math.floor(Math.random() * GHANA_CITIES.length)];
+    const pollInterval = setInterval(async () => {
+      try {
+        const [latestCount, latestSignatures] = await Promise.all([
+          getSignatureCount(),
+          getSignatures(100),
+        ]);
+        setCount(latestCount);
+        setSignatures(latestSignatures);
+      } catch (err) {
+        console.error("Failed to poll signatures:", err);
+      }
+    }, 30000);
 
-      const newSimulated: Supporter = {
-        id: `sim-${Math.random().toString(36).substr(2, 9)}`,
-        name: `${template.name} (${city})`,
-        reason: Math.random() > 0.3 ? template.reason : null,
-        createdAt: new Date().toISOString(),
-      };
-
-      setSignatures((prev) => [newSimulated, ...prev]);
-      setCount((prev) => prev + 1);
-    };
-
-    const intervalTime = 15000 + Math.random() * 15000;
-    const intervalId = setInterval(triggerSimulation, intervalTime);
-    return () => clearInterval(intervalId);
+    return () => clearInterval(pollInterval);
   }, []);
 
   const handleSignSuccess = (newSupporter: Supporter) => {
     setSignatures((prev) => [newSupporter, ...prev]);
     setCount((prev) => prev + 1);
-    setHasSigned(true);
-    localStorage.setItem("nita_petition_signed", "true");
+    localStorage.setItem(signedStorageKey, "true");
+    window.dispatchEvent(new Event(signedStorageChangedEvent));
   };
 
   const handleShare = () => {
@@ -178,11 +133,25 @@ export default function PetitionApp({
                 petition against the nita bill 2025
               </p>
 
-              <h1 className="mb-6 text-[40px] font-black leading-[1.05] tracking-[-2.2px] text-black sm:text-[56px]">
-                imagine i needed a<br />
-                certification to
-                <br />
-                build this.
+              <h1 className="mb-6 text-[40px] font-black leading-[1.05] tracking-[-2.2px] sm:text-[56px]">
+                <span
+                  className="block transition-colors duration-1000"
+                  style={{ color: getColor(0), transition: "color 1000ms ease-in-out" }}
+                >
+                  imagine i needed a
+                </span>
+                <span
+                  className="block transition-colors duration-1000"
+                  style={{ color: getColor(1), transition: "color 1000ms ease-in-out" }}
+                >
+                  certification to
+                </span>
+                <span
+                  className="block transition-colors duration-1000"
+                  style={{ color: getColor(2), transition: "color 1000ms ease-in-out" }}
+                >
+                  build this.
+                </span>
               </h1>
 
               <p className="mb-0 max-w-[480px] text-[15px] leading-[1.6] tracking-[-0.3px] text-[#888888] sm:text-[17px]">

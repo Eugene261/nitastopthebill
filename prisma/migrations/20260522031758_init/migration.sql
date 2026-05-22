@@ -1,7 +1,12 @@
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
+
 -- CreateTable
 CREATE TABLE "Signature" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "name" TEXT,
     "reason" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Signature_pkey" PRIMARY KEY ("id")
 );

@@ -3,6 +3,13 @@
 import prisma from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
+type SignatureRow = {
+  id: string;
+  name: string | null;
+  reason: string | null;
+  createdAt: Date;
+};
+
 function getErrorCode(error: unknown) {
   if (error && typeof error === "object" && "code" in error) {
     return String(error.code);
@@ -30,7 +37,7 @@ export async function getSignatures(limit = 100) {
       take: limit
     });
     // Serialize Dates for client consumption
-    return signatures.map(sig => ({
+    return signatures.map((sig: SignatureRow) => ({
       id: sig.id,
       name: sig.name || "Anonymous Supporter",
       reason: sig.reason || null,

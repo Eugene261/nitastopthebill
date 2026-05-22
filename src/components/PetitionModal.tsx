@@ -129,7 +129,7 @@ export default function PetitionModal({
             <input
               type="email"
               id="modal-email"
-              placeholder="you@example.com"
+              placeholder="used only to prevent duplicate signatures"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className="w-full px-4 py-3 bg-[#fafafa] border border-[#e0e0e0] rounded-lg text-[15px] tracking-[-0.3px] text-black placeholder-[#bbbbbb] focus:outline-none focus:border-[#999999] transition"

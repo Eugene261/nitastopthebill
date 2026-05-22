@@ -7,15 +7,50 @@ const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
 });
 
+const siteTitle = "stop the nita bill - petition";
+const siteDescription =
+  "Imagine needing a government certification to build software. Sign the petition against the NITA Bill 2025.";
+
+function getSiteUrl() {
+  const url =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : undefined) ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ??
+    "http://localhost:3000";
+
+  return new URL(url);
+}
+
 export const metadata: Metadata = {
-  title: "stop the nita bill — petition",
-  description:
-    "the people we put in power are the same exact people that goes against us. sign the petition to stop the NITA Bill 2025.",
+  metadataBase: getSiteUrl(),
+  title: siteTitle,
+  description: siteDescription,
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    title: "stop the nita bill — petition",
-    description:
-      "imagine i needed a certification to build this. sign the petition.",
+    title: siteTitle,
+    description: siteDescription,
+    url: "/",
+    siteName: "Stop the NITA Bill",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Stop the NITA Bill petition preview",
+      },
+    ],
+    locale: "en_GH",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteTitle,
+    description: siteDescription,
+    images: ["/opengraph-image"],
   },
 };
 

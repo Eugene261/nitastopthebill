@@ -20,7 +20,7 @@ function getSiteUrl() {
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ??
     "http://localhost:3000";
 
-  return new URL(url);
+  return new URL(url.startsWith("http") ? url : `https://${url}`);
 }
 
 export const metadata: Metadata = {

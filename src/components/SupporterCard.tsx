@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 
 export interface Supporter {
   id: string;
@@ -9,6 +11,12 @@ export interface Supporter {
 
 interface SupporterCardProps {
   supporter: Supporter;
+}
+
+interface RelativeTimeProps {
+  className?: string;
+  dateString: string;
+  prefix?: string;
 }
 
 export function formatRelativeTime(dateString: string): string {
@@ -32,31 +40,59 @@ export function formatRelativeTime(dateString: string): string {
   return `${days} days ago`;
 }
 
+export function RelativeTime({
+  className,
+  dateString,
+  prefix,
+}: RelativeTimeProps) {
+  const [relativeTime, setRelativeTime] = useState<string | null>(null);
+
+  useEffect(() => {
+    const updateRelativeTime = () => {
+      setRelativeTime(formatRelativeTime(dateString));
+    };
+
+    updateRelativeTime();
+    const intervalId = window.setInterval(updateRelativeTime, 60000);
+
+    return () => window.clearInterval(intervalId);
+  }, [dateString]);
+
+  return (
+    <p className={className}>
+      {prefix}
+      {relativeTime ? `${prefix ? " - " : ""}${relativeTime}` : ""}
+      {!prefix && !relativeTime ? "recently" : ""}
+    </p>
+  );
+}
+
 export default function SupporterCard({ supporter }: SupporterCardProps) {
-  const initials = supporter.name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .substring(0, 2)
-    .toUpperCase() || "A";
+  const initials =
+    supporter.name
+      .split(" ")
+      .map((namePart) => namePart[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase() || "A";
 
   return (
     <div className="flex gap-4 py-5 border-b border-[#f0f0f0] last:border-b-0 animate-fade-up">
-      {/* Avatar */}
       <div className="w-10 h-10 rounded-full bg-[#f5f5f5] flex items-center justify-center flex-shrink-0 text-[13px] font-bold text-[#999999] select-none">
         {initials}
       </div>
 
-      {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2">
           <span className="font-bold text-[15px] tracking-[-0.3px] text-black truncate">
             {supporter.name}
           </span>
         </div>
-        <p className="text-[13px] tracking-[-0.3px] text-[#aaaaaa] mt-0.5">
-          signed · {formatRelativeTime(supporter.createdAt)}
-        </p>
+        <RelativeTime
+          className="text-[13px] tracking-[-0.3px] text-[#aaaaaa] mt-0.5"
+          dateString={supporter.createdAt}
+          prefix="signed"
+        />
         {supporter.reason && (
           <p className="text-[14px] tracking-[-0.3px] text-[#666666] leading-[1.5] mt-2">
             {supporter.reason}

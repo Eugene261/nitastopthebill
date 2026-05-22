@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Script from "next/script";
 import { addSignature } from "@/app/actions";
 
 interface PetitionModalProps {
@@ -14,6 +15,16 @@ interface PetitionModalProps {
   }) => void;
 }
 
+declare global {
+  interface Window {
+    turnstile?: {
+      reset: () => void;
+    };
+  }
+}
+
+const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
 export default function PetitionModal({
   isOpen,
   onClose,
@@ -26,13 +37,22 @@ export default function PetitionModal({
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setIsSubmitting(true);
     setError(null);
 
+    const formData = new FormData(event.currentTarget);
+    const turnstileToken = formData.get("cf-turnstile-response")?.toString();
+
+    if (turnstileSiteKey && !turnstileToken) {
+      setError("Please complete verification.");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      const res = await addSignature(name, reason);
+      const res = await addSignature(name, reason, turnstileToken);
       if (res.success && res.signature) {
         onSuccess(res.signature);
         setName("");
@@ -40,10 +60,12 @@ export default function PetitionModal({
         onClose();
       } else {
         setError(res.error || "something went wrong.");
+        window.turnstile?.reset();
       }
     } catch (err) {
       console.error(err);
       setError("something went wrong. try again.");
+      window.turnstile?.reset();
     } finally {
       setIsSubmitting(false);
     }
@@ -54,11 +76,19 @@ export default function PetitionModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px] animate-fade-in"
       onClick={onClose}
     >
+      {turnstileSiteKey && (
+        <Script
+          async
+          defer
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+          strategy="afterInteractive"
+        />
+      )}
+
       <div
         className="w-full max-w-[420px] bg-white rounded-xl overflow-hidden animate-fade-up"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
       >
-        {/* Header */}
         <div className="px-6 pt-6 pb-0 flex items-center justify-between">
           <h3 className="text-[15px] font-black tracking-[-0.5px] text-black">
             sign the petition
@@ -68,11 +98,10 @@ export default function PetitionModal({
             className="text-[#cccccc] hover:text-black transition text-[20px] leading-none cursor-pointer"
             aria-label="Close modal"
           >
-            ×
+            x
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="space-y-1.5">
             <label
@@ -86,7 +115,7 @@ export default function PetitionModal({
               id="modal-name"
               placeholder="anonymous is fine too"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(event) => setName(event.target.value)}
               className="w-full px-4 py-3 bg-[#fafafa] border border-[#e0e0e0] rounded-lg text-[15px] tracking-[-0.3px] text-black placeholder-[#bbbbbb] focus:outline-none focus:border-[#999999] transition"
               disabled={isSubmitting}
             />
@@ -102,13 +131,23 @@ export default function PetitionModal({
             <textarea
               id="modal-reason"
               rows={3}
-              placeholder="optional — share your perspective"
+              placeholder="optional - share your perspective"
               value={reason}
-              onChange={(e) => setReason(e.target.value)}
+              onChange={(event) => setReason(event.target.value)}
               className="w-full px-4 py-3 bg-[#fafafa] border border-[#e0e0e0] rounded-lg text-[15px] tracking-[-0.3px] text-black placeholder-[#bbbbbb] focus:outline-none focus:border-[#999999] transition resize-none"
               disabled={isSubmitting}
             />
           </div>
+
+          {turnstileSiteKey && (
+            <div className="min-h-[65px]">
+              <div
+                className="cf-turnstile"
+                data-sitekey={turnstileSiteKey}
+                data-theme="light"
+              />
+            </div>
+          )}
 
           {error && (
             <p className="text-[13px] text-red-500 tracking-[-0.3px]">

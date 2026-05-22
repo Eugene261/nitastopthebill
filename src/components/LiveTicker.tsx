@@ -1,5 +1,5 @@
 import React from "react";
-import { Supporter, formatRelativeTime } from "./SupporterCard";
+import { RelativeTime, Supporter } from "./SupporterCard";
 
 interface LiveTickerProps {
   signatures: Supporter[];
@@ -16,12 +16,13 @@ export default function LiveTicker({ signatures }: LiveTickerProps) {
         </p>
       ) : (
         recentSignatures.map((sig) => {
-          const initials = sig.name
-            .split(" ")
-            .map((n) => n[0])
-            .join("")
-            .substring(0, 2)
-            .toUpperCase() || "A";
+          const initials =
+            sig.name
+              .split(" ")
+              .map((namePart) => namePart[0])
+              .join("")
+              .substring(0, 2)
+              .toUpperCase() || "A";
 
           return (
             <div
@@ -35,9 +36,10 @@ export default function LiveTicker({ signatures }: LiveTickerProps) {
                 <p className="text-[13px] font-semibold tracking-[-0.3px] text-black truncate">
                   {sig.name}
                 </p>
-                <p className="text-[11px] tracking-[-0.3px] text-[#bbbbbb]">
-                  {formatRelativeTime(sig.createdAt)}
-                </p>
+                <RelativeTime
+                  className="text-[11px] tracking-[-0.3px] text-[#bbbbbb]"
+                  dateString={sig.createdAt}
+                />
               </div>
             </div>
           );

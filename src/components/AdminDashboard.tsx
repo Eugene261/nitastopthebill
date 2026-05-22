@@ -269,6 +269,7 @@ export default function AdminDashboard({
                 submission draft
               </p>
               <textarea
+                aria-label="Submission email draft"
                 className="h-[420px] w-full resize-none rounded-lg border border-[#e0e0e0] bg-white p-3 text-[12px] leading-[1.5] tracking-[-0.1px] text-[#333333] outline-none focus:border-[#999999]"
                 readOnly
                 value={mailDraft}

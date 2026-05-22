@@ -10,8 +10,12 @@ datasource db {
 }
 
 model Signature {
-  id        String   @id @default(uuid())
-  name      String?  // Optional name; defaults to "Anonymous Techie" if blank
-  reason    String?  // Optional statement/reason
-  createdAt DateTime @default(now())
+  id                    String    @id @default(uuid())
+  name                  String?   // Optional name; defaults to "Anonymous Techie" if blank
+  reason                String?   // Optional statement/reason
+  emailHash             String?   @unique
+  verificationTokenHash String?   @unique
+  verificationExpiresAt DateTime?
+  verifiedAt            DateTime?
+  createdAt             DateTime  @default(now())
 }

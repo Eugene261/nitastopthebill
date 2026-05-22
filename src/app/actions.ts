@@ -1,6 +1,11 @@
 "use server";
 
 import prisma from "@/lib/db";
+import {
+  hashEmail,
+  isValidEmail,
+  normalizeEmail,
+} from "@/lib/signatureVerification";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 
@@ -67,7 +72,20 @@ async function verifyTurnstile(token?: string) {
 
 export async function getSignatureCount() {
   try {
-    const count = await prisma.signature.count();
+    const count = await prisma.signature.count({
+      where: {
+        OR: [
+          {
+            verifiedAt: {
+              not: null,
+            },
+          },
+          {
+            emailHash: null,
+          },
+        ],
+      },
+    });
     return count;
   } catch (error) {
     console.warn("Failed to get signature count:", getErrorCode(error));
@@ -78,17 +96,29 @@ export async function getSignatureCount() {
 export async function getSignatures(limit = 100) {
   try {
     const signatures = await prisma.signature.findMany({
-      orderBy: {
-        createdAt: "desc"
+      where: {
+        OR: [
+          {
+            verifiedAt: {
+              not: null,
+            },
+          },
+          {
+            emailHash: null,
+          },
+        ],
       },
-      take: limit
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: limit,
     });
     // Serialize Dates for client consumption
     return signatures.map((sig: SignatureRow) => ({
       id: sig.id,
       name: sig.name || "Anonymous Supporter",
       reason: sig.reason || null,
-      createdAt: sig.createdAt.toISOString()
+      createdAt: sig.createdAt.toISOString(),
     }));
   } catch (error) {
     console.warn("Failed to fetch signatures:", getErrorCode(error));
@@ -100,6 +130,7 @@ export async function getSignatures(limit = 100) {
 export async function addSignature(
   name?: string,
   reason?: string,
+  email?: string,
   turnstileToken?: string,
 ) {
   try {
@@ -109,25 +140,62 @@ export async function addSignature(
       return { success: false, error: "Please complete verification." };
     }
 
+    const formattedEmail = normalizeEmail(email);
+
+    if (!isValidEmail(formattedEmail)) {
+      return { success: false, error: "Please enter a valid email address." };
+    }
+
     const formattedName = name?.trim() || null;
     const formattedReason = reason?.trim() || null;
-
-    const newSignature = await prisma.signature.create({
-      data: {
-        name: formattedName,
-        reason: formattedReason
-      }
+    const emailHash = hashEmail(formattedEmail);
+    const existingSignature = await prisma.signature.findUnique({
+      where: {
+        emailHash,
+      },
     });
 
+    if (existingSignature?.verifiedAt) {
+      return {
+        success: false,
+        error: "This email has already signed the petition.",
+      };
+    }
+
+    const countedAt = new Date();
+    const signature = existingSignature
+      ? await prisma.signature.update({
+          where: {
+            id: existingSignature.id,
+          },
+          data: {
+            name: formattedName,
+            reason: formattedReason,
+            verificationExpiresAt: null,
+            verificationTokenHash: null,
+            verifiedAt: countedAt,
+          },
+        })
+      : await prisma.signature.create({
+          data: {
+            name: formattedName,
+            reason: formattedReason,
+            emailHash,
+            verifiedAt: countedAt,
+          },
+        });
+
     revalidatePath("/");
+    revalidatePath("/admin");
+
     return {
       success: true,
       signature: {
-        id: newSignature.id,
-        name: newSignature.name || "Anonymous Supporter",
-        reason: newSignature.reason || null,
-        createdAt: newSignature.createdAt.toISOString()
-      }
+        id: signature.id,
+        name: signature.name || "Anonymous Supporter",
+        reason: signature.reason || null,
+        createdAt: signature.createdAt.toISOString(),
+      },
     };
   } catch (error) {
     console.warn("Failed to add signature:", getErrorCode(error));

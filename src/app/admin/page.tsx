@@ -30,6 +30,18 @@ async function getAdminSignatures() {
 
   try {
     const signatures = await prisma.signature.findMany({
+      where: {
+        OR: [
+          {
+            verifiedAt: {
+              not: null,
+            },
+          },
+          {
+            emailHash: null,
+          },
+        ],
+      },
       orderBy: {
         createdAt: "desc",
       },

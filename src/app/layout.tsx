@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import { getSiteUrl } from "@/lib/siteUrl";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -10,18 +11,6 @@ const plusJakarta = Plus_Jakarta_Sans({
 const siteTitle = "stop the nita bill - petition";
 const siteDescription =
   "Imagine needing a government certification to build software. Sign the petition against the NITA Bill 2025.";
-
-function getSiteUrl() {
-  const url =
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : undefined) ??
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ??
-    "http://localhost:3000";
-
-  return new URL(url.startsWith("http") ? url : `https://${url}`);
-}
 
 export const metadata: Metadata = {
   metadataBase: getSiteUrl(),
@@ -61,7 +50,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${plusJakarta.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-white font-sans">
+      <body
+        className="min-h-full flex flex-col bg-white font-sans"
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>

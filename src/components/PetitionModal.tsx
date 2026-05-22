@@ -3,16 +3,12 @@
 import React, { useState } from "react";
 import Script from "next/script";
 import { addSignature } from "@/app/actions";
+import type { Supporter } from "./SupporterCard";
 
 interface PetitionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (newSupporter: {
-    id: string;
-    name: string;
-    reason: string | null;
-    createdAt: string;
-  }) => void;
+  onSuccess: (newSupporter: Supporter) => void;
 }
 
 declare global {
@@ -31,6 +27,7 @@ export default function PetitionModal({
   onSuccess,
 }: PetitionModalProps) {
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,10 +49,11 @@ export default function PetitionModal({
     }
 
     try {
-      const res = await addSignature(name, reason, turnstileToken);
+      const res = await addSignature(name, reason, email, turnstileToken);
       if (res.success && res.signature) {
         onSuccess(res.signature);
         setName("");
+        setEmail("");
         setReason("");
         onClose();
       } else {
@@ -123,6 +121,25 @@ export default function PetitionModal({
 
           <div className="space-y-1.5">
             <label
+              htmlFor="modal-email"
+              className="text-[12px] tracking-[1px] uppercase text-[#aaaaaa] font-medium"
+            >
+              email for duplicate check
+            </label>
+            <input
+              type="email"
+              id="modal-email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="w-full px-4 py-3 bg-[#fafafa] border border-[#e0e0e0] rounded-lg text-[15px] tracking-[-0.3px] text-black placeholder-[#bbbbbb] focus:outline-none focus:border-[#999999] transition"
+              disabled={isSubmitting}
+              required
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label
               htmlFor="modal-reason"
               className="text-[12px] tracking-[1px] uppercase text-[#aaaaaa] font-medium"
             >
@@ -164,8 +181,8 @@ export default function PetitionModal({
           </button>
 
           <p className="text-[12px] text-[#bbbbbb] tracking-[-0.2px] text-center leading-[1.5]">
-            your voice matters. if you leave name blank, you sign as
-            &quot;anonymous supporter.&quot;
+            your email is only used to prevent duplicate signatures. we do not
+            send email, share it, or show it publicly.
           </p>
         </form>
       </div>

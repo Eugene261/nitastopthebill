@@ -168,7 +168,7 @@ export default function PetitionApp({
 
               {hasSigned ? (
                 <div className="w-full text-center py-3 rounded-lg bg-white border border-[#e0e0e0] text-[13px] tracking-[-0.3px] text-[#888888]">
-                  ✓ signed
+                  signed
                 </div>
               ) : (
                 <button
@@ -229,7 +229,7 @@ export default function PetitionApp({
 
               {hasSigned ? (
                 <div className="w-full text-center py-3 rounded-lg bg-white border border-[#e0e0e0] text-[13px] tracking-[-0.3px] text-[#888888]">
-                  ✓ signed
+                  signed
                 </div>
               ) : (
                 <button
@@ -261,7 +261,7 @@ export default function PetitionApp({
         </div>
       </main>
 
-      {/* ─── FOOTER ─── */}
+      {/* Footer */}
       <footer className="pb-10 text-center space-y-2">
         <p className="text-[13px] tracking-[-0.3px] text-[#888888]">
           built with frustration and love for ghana&apos;s tech ecosystem

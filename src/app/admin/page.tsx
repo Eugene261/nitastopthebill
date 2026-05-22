@@ -10,6 +10,13 @@ export const metadata: Metadata = {
   description: "Review, export, and prepare petition signatures.",
 };
 
+type SignatureRow = {
+  id: string;
+  name: string | null;
+  reason: string | null;
+  createdAt: Date;
+};
+
 function getErrorCode(error: unknown) {
   if (error && typeof error === "object" && "code" in error) {
     return String(error.code);
@@ -32,7 +39,7 @@ async function getAdminSignatures() {
     return {
       errorCode: null,
       generatedAt,
-      signatures: signatures.map<Supporter>((signature) => ({
+      signatures: signatures.map<Supporter>((signature: SignatureRow) => ({
         id: signature.id,
         name: signature.name || "Anonymous Supporter",
         reason: signature.reason || null,

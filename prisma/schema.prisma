@@ -1,0 +1,17 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Signature {
+  id        String   @id @default(uuid())
+  name      String?  // Optional name; defaults to "Anonymous Techie" if blank
+  reason    String?  // Optional statement/reason
+  createdAt DateTime @default(now())
+}

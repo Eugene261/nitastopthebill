@@ -187,6 +187,25 @@ export default function PetitionApp({
               </button>
             </div>
 
+            {/* apdigh.org callout: NITA is one of 15 bills */}
+            <div className="animate-ring rounded-xl p-5 sm:p-6">
+              <p className="mb-2 text-[11px] uppercase tracking-[1.5px] text-[#aaaaaa]">
+                this isn&apos;t the only bill
+              </p>
+              <p className="text-[14px] leading-[1.55] tracking-[-0.3px] text-[#555555] sm:text-[15px]">
+                the NITA bill is one of 15 currently being pushed — and it isn&apos;t even in the top 5 worst. see the full breakdown of every bill at{" "}
+                <a
+                  href="https://apdigh.org/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-black underline underline-offset-2 transition-colors hover:text-[#666666]"
+                >
+                  apdigh.org
+                </a>
+                {" "}and check it out for yourself.
+              </p>
+            </div>
+
             {/* Quotes section */}
             <div className="grid gap-3 sm:grid-cols-2 animate-fade-up">
               <div className="rounded-lg border border-[#f0f0f0] bg-[#fafafa] px-4 py-3.5 text-[14px] tracking-[-0.3px] text-[#888888] sm:text-[15px]">

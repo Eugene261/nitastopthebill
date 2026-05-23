@@ -39,6 +39,32 @@ body {
   color: var(--foreground);
 }
 
+@property --ring-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.animate-ring {
+  position: relative;
+  background:
+    linear-gradient(#fafafa, #fafafa) padding-box,
+    conic-gradient(
+      from var(--ring-angle),
+      #CE1126,
+      #D9A200,
+      #CE1126,
+      #D9A200,
+      #CE1126
+    ) border-box;
+  border: 2px solid transparent;
+  animation: ring-rotate 4s linear infinite;
+}
+
+@keyframes ring-rotate {
+  to { --ring-angle: 360deg; }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

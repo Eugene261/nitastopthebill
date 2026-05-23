@@ -25,9 +25,8 @@ function csvCell(value: string | null) {
 
 function downloadCsv(signatures: Supporter[]) {
   const rows = [
-    ["id", "name", "comment", "signed_at"],
+    ["name", "comment", "signed_at"],
     ...signatures.map((signature) => [
-      signature.id,
       signature.name,
       signature.reason ?? "",
       signature.createdAt,

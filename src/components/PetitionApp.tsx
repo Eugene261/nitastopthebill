@@ -202,7 +202,16 @@ export default function PetitionApp({
                 >
                   apdigh.org
                 </a>
-                {" "}and check it out for yourself.
+                {" "}or{" "}
+                <a
+                  href="https://drive.google.com/file/d/1XzA5DJW6BGzkgQmjteK8b49xZytLRnmE/view"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-black underline underline-offset-2 transition-colors hover:text-[#666666]"
+                >
+                  read all 15 bills directly
+                </a>
+                . check it out for yourself.
               </p>
             </div>
 

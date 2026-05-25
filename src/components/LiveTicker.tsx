@@ -5,6 +5,16 @@ interface LiveTickerProps {
   signatures: Supporter[];
 }
 
+function getInitials(name: string): string {
+  const letters: string[] = [];
+  for (const word of name.trim().split(/\s+/)) {
+    const match = word.match(/\p{L}/u);
+    if (match) letters.push(match[0].toUpperCase());
+    if (letters.length >= 2) break;
+  }
+  return letters.join("") || "A";
+}
+
 export default function LiveTicker({ signatures }: LiveTickerProps) {
   const recentSignatures = signatures.slice(0, 6);
 
@@ -16,13 +26,7 @@ export default function LiveTicker({ signatures }: LiveTickerProps) {
         </p>
       ) : (
         recentSignatures.map((sig) => {
-          const initials =
-            sig.name
-              .split(" ")
-              .map((namePart) => namePart[0])
-              .join("")
-              .substring(0, 2)
-              .toUpperCase() || "A";
+          const initials = getInitials(sig.name);
 
           return (
             <div

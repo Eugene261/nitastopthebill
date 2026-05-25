@@ -67,14 +67,18 @@ export function RelativeTime({
   );
 }
 
+function getInitials(name: string): string {
+  const letters: string[] = [];
+  for (const word of name.trim().split(/\s+/)) {
+    const match = word.match(/\p{L}/u);
+    if (match) letters.push(match[0].toUpperCase());
+    if (letters.length >= 2) break;
+  }
+  return letters.join("") || "A";
+}
+
 export default function SupporterCard({ supporter }: SupporterCardProps) {
-  const initials =
-    supporter.name
-      .split(" ")
-      .map((namePart) => namePart[0])
-      .join("")
-      .substring(0, 2)
-      .toUpperCase() || "A";
+  const initials = getInitials(supporter.name);
 
   return (
     <div className="flex gap-4 py-5 border-b border-[#f0f0f0] last:border-b-0 animate-fade-up">

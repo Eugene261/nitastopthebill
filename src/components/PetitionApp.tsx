@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useSyncExternalStore } from "react";
+import React, { useState, useEffect, useRef, useSyncExternalStore } from "react";
 import ProgressBar from "./ProgressBar";
 import SupporterCard, { Supporter } from "./SupporterCard";
 import LiveTicker from "./LiveTicker";
@@ -60,6 +60,33 @@ export default function PetitionApp({
   );
   const [shareCopied, setShareCopied] = useState(false);
   const [colorOffset, setColorOffset] = useState(0);
+  const [showFloatingSign, setShowFloatingSign] = useState(false);
+  const inlineSignRef = useRef<HTMLDivElement>(null);
+  const desktopSignRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const targets = [inlineSignRef.current, desktopSignRef.current].filter(
+      (node): node is HTMLDivElement => node !== null,
+    );
+    if (targets.length === 0) return;
+
+    const visibility = new Map<Element, boolean>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          visibility.set(entry.target, entry.isIntersecting);
+        }
+        const anyVisible = Array.from(visibility.values()).some(Boolean);
+        setShowFloatingSign(!anyVisible);
+      },
+      { threshold: 0 },
+    );
+
+    for (const target of targets) {
+      observer.observe(target);
+    }
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -122,7 +149,7 @@ export default function PetitionApp({
   return (
     <div className="min-h-screen bg-white">
       <main className="mx-auto max-w-[1024px] px-6 pt-12 pb-20 sm:pt-20">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-12 lg:gap-20 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-12 lg:gap-20">
           
           {/* Left Column: Hero, Mobile Progress & Actions, Quotes, Supporters Feed */}
           <div className="space-y-12 sm:space-y-16">
@@ -163,7 +190,10 @@ export default function PetitionApp({
             </div>
 
             {/* Mobile-only Progress & Sign (Visible < lg) */}
-            <div className="block lg:hidden rounded-xl border border-[#f0f0f0] bg-[#fafafa] p-6 space-y-5 animate-fade-up">
+            <div
+              ref={inlineSignRef}
+              className="block lg:hidden rounded-xl border border-[#f0f0f0] bg-[#fafafa] p-6 space-y-5 animate-fade-up"
+            >
               <ProgressBar count={count} />
 
               {hasSigned ? (
@@ -252,7 +282,10 @@ export default function PetitionApp({
           <div className="lg:sticky lg:top-16 space-y-8 w-full animate-fade-in">
             
             {/* Desktop Progress Card (Visible lg) */}
-            <div className="hidden lg:block rounded-xl border border-[#f0f0f0] bg-[#fafafa] p-6 space-y-5">
+            <div
+              ref={desktopSignRef}
+              className="hidden lg:block rounded-xl border border-[#f0f0f0] bg-[#fafafa] p-6 space-y-5"
+            >
               <ProgressBar count={count} />
 
               {hasSigned ? (
@@ -305,6 +338,30 @@ export default function PetitionApp({
           </a>
         </p>
       </footer>
+
+      {/* Floating bottom CTA (shown when no sign card is in view and user hasn't signed) */}
+      {!hasSigned && showFloatingSign && !isModalOpen && (
+        <div
+          className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#e0e0e0] bg-white/95 backdrop-blur-sm px-4 pt-3 animate-fade-up"
+          style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+        >
+          <div className="mx-auto flex max-w-[480px] gap-2">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex-1 py-3 bg-black text-white text-[15px] font-bold tracking-[-0.3px] rounded-lg transition-opacity duration-300 hover:opacity-80 cursor-pointer"
+            >
+              sign the petition
+            </button>
+            <button
+              onClick={handleShare}
+              aria-label="share"
+              className="px-4 py-3 border border-[#e0e0e0] bg-white text-[15px] tracking-[-0.3px] text-black rounded-lg transition-colors hover:border-[#999999] cursor-pointer"
+            >
+              {shareCopied ? "copied" : "share"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal */}
       <PetitionModal
